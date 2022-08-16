@@ -1,20 +1,32 @@
+import { NavigationContainer } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import { Provider } from 'react-redux';
+import { TailwindProvider } from 'tailwindcss-react-native';
+import { RootNavigator } from './navigation';
+import { store } from './redux/store';
+
+export const API_URL = 'http://10.10.11.32:3000/api/'
+
 
 export default function App() {
+
+  let [fontsLoaded] = useFonts({
+    "Montserrat-Medium": require('./assets/fonts/Montserrat-Medium.ttf')
+  })
+  if (!fontsLoaded) return null
+
+
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Provider store={store}>
+      <TailwindProvider>
+        <NavigationContainer>
+          <RootNavigator />
+        </NavigationContainer>
+      </TailwindProvider>
+    </Provider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
