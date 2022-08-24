@@ -1,17 +1,18 @@
 import { View, Text, StyleSheet, Pressable, TextInput, KeyboardAvoidingView, GestureResponderEvent } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Formik } from 'formik'
 import * as Yup from 'yup';
 import { Fontisto, EvilIcons } from '@expo/vector-icons';
 import { AuthSwitch, StackSwitch } from '../../redux/slices/SwitchSlice';
 import { AppDispatch } from '../../redux/store';
 import { useDispatch } from 'react-redux';
-import { API_URL } from '../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RouteParams } from '../../types/RooteTypes';
 import AuthLayout from '../../Layouts/Layout';
+import { API_URL } from '../../types/Urls';
+import { isValidBool, isValidUser } from '../../constants/isValidUser';
 
 
 
@@ -25,17 +26,18 @@ const SignupSchema = Yup.object().shape({
 
 export const Login = () => {
 
-    const [emailError, setEmailError] = useState<boolean>(false)
-    const [passwordError, setPasswordError] = useState<boolean>(false)
-    const [emailMessage, setEmailMessage] = useState<string>()
-    const [pswMessage, setPswMessage] = useState<string>()
+    useEffect(() => {
+        isValidUser()
+        if (isValidBool == true) dispatch(StackSwitch({ users: true }))
+    }, [])
 
-    const disaptch: AppDispatch = useDispatch()
+
+    const dispatch: AppDispatch = useDispatch()
+    const [isErrors, setIsErrors] = useState<boolean>(false)
+
     const Inscription = () => {
-        disaptch(AuthSwitch({ switchForm: true }))
+        dispatch(AuthSwitch({ switchForm: true }))
     }
-
-
 
     const login = async (values: any) => {
         const result = await fetch(`${API_URL}login`, {
@@ -48,32 +50,21 @@ export const Login = () => {
                 password: values.password,
             })
         }).then((res) => res.json())
-
         console.log(result);
         const { Message, Token } = result
         if (Message == 'success') {
-            disaptch(StackSwitch({ users: true }))
-            async () => {
-                try {
-                    await AsyncStorage.setItem('Access_Token', Token)
-                } catch (e) {
-                    console.log(e);
-                }
-            }
+
+            await AsyncStorage.setItem('Access_Token', Token)
+
+            setTimeout(() => {
+                dispatch(StackSwitch({ users: true }))
+
+            }, 400)
         } else {
-            if (Message == 'This email dosnt match any account') {
-                setEmailError(true)
-                setEmailMessage(Message)
-            } else if (Message == 'password Inccorect') {
-                setPasswordError(true)
-                setPswMessage(Message)
-            }
+            setIsErrors(true)
         }
     }
 
-    const handleSubmit = (event: GestureResponderEvent) => {
-        
-    };
     return (
         <AuthLayout>
             <KeyboardAvoidingView style={styles.formContainer}>
@@ -85,12 +76,12 @@ export const Login = () => {
                     initialValues={{ email: '', password: '' }}
                     validationSchema={SignupSchema}
                     onSubmit={values =>
-                        // login(values)
-                        console.log(values)
-                        
+                        login(values)
+                        // console.log(values)
+
                     }
                 >
-                    {({ handleChange, handleBlur, values, errors, touched }) => (
+                    {({ handleChange, handleSubmit, handleBlur, values, errors, touched }) => (
                         <><View style={styles.inputsContainer}>
 
                             <View style={styles.inputs}>
@@ -106,7 +97,15 @@ export const Login = () => {
                                 <View style={styles.icons}>
                                     <Fontisto name="email" size={24} color="gray" />
                                 </View>
-
+                                {
+                                    errors.email && touched.email ?
+                                        (
+                                            <View style={styles.errorMsgContainer}>
+                                                <Text style={styles.errorMsg}>{errors.email}</Text>
+                                            </View>
+                                        )
+                                        : null
+                                }
                             </View>
                             <View style={styles.inputs}>
                                 <TextInput
@@ -124,23 +123,16 @@ export const Login = () => {
                                 </View>
 
                             </View>
-                            <View style={{ width: '100%', height: 'auto', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-                                {errors.email || errors.password && touched.email || touched.password ?
-                                    
-                                    <View style={styles.errorMsgContainer}>
-                                        
-                                        <Text style={styles.errorMsg}>Identifiant ou mot de passe incorrect</Text>
-                                    </View>
-                                    : null}
+                            {isErrors ? <View className='w-10/12 mt-7 h-8 border-[#ad0808] mb-4 border-2 rounded-lg justify-center items-center'>
+                                <Text className='text-[#ad0808]' style={{ fontFamily: 'Montserrat-Medium', fontWeight: '600' }}>Identifiant ou mot de passe incorrect</Text>
+                            </View> : null}
+                            <View className={`w-full justify-center items-center h-fit  space-y-4 ${isErrors ? 'mt-2' : 'mt-10'}`}>
                                 <Pressable onPress={handleSubmit}>
-                                    <View style={styles.button}>
-                                        <Text style={{ color: 'white', fontFamily: 'Montserrat-Medium', fontWeight: '600', fontSize: 16 }}>Connexion</Text>
+                                    <View className='w-44 h-[65px] bg-[#ad0808] rounded-full items-center justify-center'>
+                                        <Text className='text-white font-semibold' style={{ fontFamily: 'Montserrat-Medium' }}>Connexion</Text>
                                     </View>
                                 </Pressable>
-
-                                <View style={{ marginTop: 10 }}>
-                                    <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#606060' }}>J'ai oublie mon mot de passe</Text>
-                                </View>
+                                <Text style={{ fontFamily: 'Montserrat-Medium', fontSize: 16, color: '#606060' }}>J'ai oublie mon mot de passe</Text>
                             </View>
 
                         </View>
@@ -241,17 +233,16 @@ const styles = StyleSheet.create({
         fontFamily: 'Montserrat-Medium'
     },
     errorMsg: {
-        color: 'red',
-        textAlign: 'center'
+        color: 'red'
     },
     errorMsgContainer: {
-        width: '85%',
-        borderColor: 'red',
-        paddingVertical: 7,
-        borderWidth: 2,
-        marginTop: 20,
+        width: '100%',
+        justifyContent: 'flex-start',
+        paddingLeft: 15,
+        paddingTop: 3,
         position: 'absolute',
-        top: 0,
+        bottom: -25,
+        left: -15
     }
 
 

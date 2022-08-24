@@ -8,14 +8,14 @@ import { useDispatch } from 'react-redux';
 import { AuthSwitch, StackSwitch } from '../../redux/slices/SwitchSlice';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { API_URL } from '../../App';
 import { RouteParams } from '../../types/RooteTypes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthLayout from '../../Layouts/Layout';
+import { API_URL } from '../../types/Urls';
 
 const SignupSchema = Yup.object().shape({
     firstName: Yup.string()
-        .min(4, 'Too Short!')
+        .min(3, 'Too Short!')
         .max(10, 'Too Long!')
         .required('Required'),
     lastName: Yup.string()
@@ -41,20 +41,15 @@ export const Register = () => {
     const [message, setMessage] = useState<string>('')
     const navigation = useNavigation<NativeStackNavigationProp<RouteParams>>()
     const dispatch: AppDispatch = useDispatch()
-    const [borderColor, setBorderColor] = useState<any>({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phoneNumber: '',
-        password: '',
-        image: ''
-    })
+
 
     const Connexion = () => {
         dispatch(AuthSwitch({ switchForm: false }))
     }
 
     const register = async (values: any) => {
+        const { firstName, lastName, email, phoneNumber, password } = values
+        // console.log(values);
 
         const result = await fetch(`${API_URL}register`, {
             method: 'POST',
@@ -62,11 +57,12 @@ export const Register = () => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                firstName: values.firstName,
-                lastName: values.lastName,
-                email: values.email,
-                phoneNumber: values.phoneNumber,
-                pass: values.password,
+                firstName,
+                lastName,
+                email,
+                phoneNumber,
+                pass: password,
+                isValidate: false
             })
         }).then((res) => res.json())
 
@@ -76,14 +72,10 @@ export const Register = () => {
             setEmailError(true)
             setMessage(Message)
         } else if (Message == 'success') {
-            async () => {
-                try {
-                    await AsyncStorage.setItem('Access_Token', Token)
-                } catch (e) {
-                    console.log(e);   
-                }
-            }
-            dispatch(StackSwitch({ users: true }))
+            AsyncStorage.setItem('Access_Token', Token)
+            AsyncStorage.setItem('email_verfication', values.email)
+            
+            navigation.navigate('EmailVerificationScreen')
         }
 
     }
@@ -106,9 +98,10 @@ export const Register = () => {
                 <Formik
                     initialValues={{ firstName: '', lastName: '', email: '', phoneNumber: '', password: '' }}
                     validationSchema={SignupSchema}
-                    onSubmit={values =>
+                    onSubmit={(values) => {
                         register(values)
-                    }
+
+                    }}
                 >
                     {({ handleChange, handleSubmit, handleBlur, values, errors, touched }) => (
                         <>
@@ -124,7 +117,7 @@ export const Register = () => {
                                         style={styles.inputsPlaceholder}
                                     />
                                     <View style={styles.icons}>
-                                        <AntDesign name="user" size={24} color={borderColor ? borderColor : "gray"} />
+                                        <AntDesign name="user" size={24} color={"gray"} />
                                     </View>
                                     {
                                         errors.firstName && touched.firstName ?
@@ -147,7 +140,7 @@ export const Register = () => {
 
                                     />
                                     <View style={styles.icons}>
-                                        <AntDesign name="user" size={24} color={borderColor ? borderColor : "gray"} />
+                                        <AntDesign name="user" size={24} color={"gray"} />
                                     </View>
                                     {
                                         errors.lastName && touched.lastName ?

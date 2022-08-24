@@ -1,7 +1,9 @@
 export interface Switching {
-    switchForm?: boolean
+  switchForm?: boolean;
 }
 
 export interface StackSwitching extends Switching {
-    users?: boolean
+  users?: boolean;
+  VerificationScreen?: boolean;
+  verificationCode?: number | string | null;
 }
