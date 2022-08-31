@@ -12,37 +12,38 @@ import BotBarTabs from '../navigation/BotBarTabs'
 
 const HomeScreen = () => {
   const dispatch: AppDispatch = useDispatch()
-  // http://10.10.11.32:3000/api/getAllUsers
-  const getUsers = async () => {
-    try {
-      const token = await AsyncStorage.getItem('Access_Token')
-      const result = await fetch(`${API_URL}getAllUsers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          jwttoken: token
-        })
-      }).then((res) => res.json())
-      console.log(result);
-      dispatch(setUsersData({ users: result.msg }))
-    } catch (error) {
-      console.log(error);
 
+  const getUsers = async () => {
+    const token = await AsyncStorage.getItem('Access_Token')
+    console.log(token);
+    
+    const result = await fetch(`${API_URL}getAllUsers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        jwttoken: token
+      })
+    }).then((res) => res.json())
+    if (result.status == 200) {
+      dispatch(setUsersData({ users: result.msg, currentUser: result.currentUserEmail }))
+      console.log(result);
     }
+
   }
 
 
   useEffect(() => {
     getUsers()
-  })
+
+    
+  }, [])
 
   return (
     <>
       <Header />
       <TopBarTabs />
-      {/* <BotBarTabs /> */}
     </>
 
   )

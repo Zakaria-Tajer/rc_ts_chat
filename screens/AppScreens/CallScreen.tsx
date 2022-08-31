@@ -1,72 +1,109 @@
 import { View, Text, TextInput, FlatList, Image, ScrollView, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, Pressable } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import { Feather, AntDesign, Entypo, FontAwesome, Octicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSelector } from 'react-redux';
-import { RooteState } from '../../redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RooteState } from '../../redux/store';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RouteParams } from '../../types/RooteTypes';
+import { addDoc, collection, setDoc } from 'firebase/firestore';
+import { API_URL, CHAT_API_URL } from '../../types/Urls';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getPressedUsers, setUsersData } from '../../redux/slices/DataSlice';
 
-const Contacts = [
-  { id: 1, number: "0909090900", fullName: 'Jhon Doe', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 2, number: "0987654321", fullName: 'hum Doe 2', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 3, number: "1234567890", fullName: 'chan Doe 3', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 4, number: "1234567890", fullName: 'ase Doe 4', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 5, number: "1234567890", fullName: 'goerge Doe 4', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 6, number: "1234567890", fullName: 'ava Doe 4', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 7, number: "1234567890", fullName: 'max Doe 4', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 8, number: "1234567890", fullName: 'ashe Doe 4', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 9, number: "1234567890", fullName: 'courtney Doe 4', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 10, number: "1234567890", fullName: 'doja Doe 4', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
-  { id: 11, number: "1234567890", fullName: 'cats Doe 4', img: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', nums: 'Numero Sip', status: 'Gratuit' },
 
-]
 
-const CallScreen = () => {
+
+type ProfileProps = NativeStackScreenProps<RouteParams, 'HomeScreen'>;
+
+const CallScreen = ({ route, navigation }: ProfileProps) => {
+
 
   const textInputRef = useRef<TextInput>(null)
-
-  const [contacts, setContacts] = useState<any>([])
-  const [users, setUsers] = useState<any>([])
+  const currentUser = useSelector((state: RooteState) => state.dataHandler.currentUser)
 
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
+  // const [currentUser, setCurrentUser] = useState<Array<any>>([]);
 
-  const usersList = useSelector((state: RooteState) => state.dataHandler.users)
+  const userDetails = useSelector((state: RooteState) => state.dataHandler)
+
+  const dispatch: AppDispatch = useDispatch()
 
 
-  // console.log(usersList);
-  
 
-  const navigation = useNavigation<NativeStackNavigationProp<RouteParams>>()
+  const getCurrentUser = async () => {
+    console.log(userDetails.currentUser);
+
+    const result = await fetch(`${CHAT_API_URL}getDetails`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: userDetails.currentUser
+      })
+    }).then((res) => res.json())
+    console.log(result);
+  }
 
 
 
   useEffect(() => {
+    getCurrentUser()
+    // const keyboardDidShowListener = Keyboard.addListener(
+    //   'keyboardDidShow',
+    //   () => {
+    //     setKeyboardVisible(true); // or some other action
+    //   }
+    // );
+    // const keyboardDidHideListener = Keyboard.addListener(
+    //   'keyboardDidHide',
+    //   () => {
+    //     setKeyboardVisible(false); // or some other action
+    //     console.log('hidden');
+    //   }
+    // );
 
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        setKeyboardVisible(true); // or some other action
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setKeyboardVisible(false); // or some other action
-        console.log('hidden');
-      }
-    );
-
-    return () => {
-      keyboardDidHideListener.remove();
-      keyboardDidShowListener.remove();
-    };
-  }, [isKeyboardVisible, contacts]);
+    // return () => {
+    //   keyboardDidHideListener.remove();
+    //   keyboardDidShowListener.remove();
+    // };
+  }, []);
 
 
 
   const handleSearch = (keyword: string) => {
 
+  }
+
+  const getUserChatPressed = async (userId: string) => {
+
+    const token = await AsyncStorage.getItem("Access_Token")
+    const result = await fetch(`${CHAT_API_URL}getDetails`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: userId,
+        token
+      })
+    }).then((res) => res.json())
+    console.log(result);
+    if (result.status == 200) {
+      dispatch(getPressedUsers({ pressedUser: result.message }))
+    }
+
+    navigation.navigate("ChatScreen", {
+      reciverUserId: userId
+    });
+
+  }
+
+  const getUserProfile = (UserId: string) => {
+    navigation.navigate("ProfileupdateScreen", {
+      contactUserId: UserId
+    })
   }
 
 
@@ -89,25 +126,23 @@ const CallScreen = () => {
       <View className='h-4/6  overflow-hidden'>
         <FlatList
           keyExtractor={(item) => item._id}
-          data={usersList}
+          data={userDetails.users}
           renderItem={({ item }) => (
             <ScrollView style={{ width: '100%' }}>
-              <Pressable onPress={() => {
-                navigation.navigate("ChatScreen", {
-                  reciverUserId: item._id
-                })
-              }}>
+              <Pressable onPress={() => getUserChatPressed(item._id)}>
                 <View className='flex-row justify-between mb-2 border-b-2 border-gray-300 py-3'>
                   <View className='flex-row items-center space-x-2'>
-                    <View className='w-12 h-12 bg-white ml-4 mt-2 rounded-full'>
-                      <Image
-                        source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
-                        className='w-fit h-full object-contain'
-                      />
-                    </View>
-                    <View>
-                      <Text className='text-lg font-bold'>{item.firstName}{" "}{item.lastName}</Text>
-                      <Text className=''>{item.nums} <Text className='underline underline-offset-8 text-red-600'>{item.status}</Text></Text>
+                    <Pressable onPress={() => getUserProfile(item._id)}>
+                      <View className='w-12 h-12 bg-white ml-4 mt-2 rounded-full'>
+                        <Image
+                          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
+                          className='w-fit h-full object-contain'
+                        />
+                      </View>
+                    </Pressable>
+                    <View className='space-y-1'>
+                      <Text className='text-[17px]' style={{ fontFamily: 'Montserrat-Medium' }}>{item.firstName}{" "}{item.lastName}</Text>
+                      <Text className='' style={{ fontFamily: 'Montserrat-Medium' }}>{item.nums} <Text className='underline underline-offset-8 text-red-600'>Numero Sip</Text></Text>
                     </View>
                   </View>
                   <View className='space-x-6 flex-row h-full items-center justify-end pr-4 w-1/2 mt-1.5'>

@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import { isValidBool, isValidUser } from '../constants/isValidUser';
 import { StackSwitch } from '../redux/slices/SwitchSlice';
 import ChatScreen from '../screens/AppScreens/ChatScreen';
+import ProfileupdateScreen from '../screens/AppScreens/ProfileupdateScreen';
 
 
 
@@ -27,8 +28,8 @@ export function RootNavigator() {
 
   useEffect(() => {
     isValidUser()
-    if(isValidBool == true) dispatch(StackSwitch({ users: true }))
-}, [])
+    if (isValidBool == true) dispatch(StackSwitch({ users: true }))
+  }, [])
 
 
   const currentUser = useSelector((state: RooteState) => state.switchHandler.users)
@@ -53,6 +54,11 @@ export function SignedInStack() {
         headerShown: false,
         animation: 'slide_from_right',
       }} />
+      <Stack.Screen name="ProfileupdateScreen" component={ProfileupdateScreen} options={{
+        headerShown: false,
+        animation: 'slide_from_right',
+      }}
+      />
     </Stack.Navigator>
   )
 }

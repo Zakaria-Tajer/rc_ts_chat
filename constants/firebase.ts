@@ -1,21 +1,33 @@
-// Import the functions you need from the SDKs you need
-import firebase from "firebase/compat/app";
-import "firebase/compat/auth";
-import "firebase/compat/firestore"; // Your web app's Firebase configuration
+import "firebase/auth";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDj0rnR8HHquXpOjgYjU84X3PDDbaXTLLg",
-  authDomain: "chat-groupe-58576.firebaseapp.com",
-  projectId: "chat-groupe-58576",
-  storageBucket: "chat-groupe-58576.appspot.com",
-  messagingSenderId: "387395013846",
-  appId: "1:387395013846:web:99bebbbffa7879074e8d77",
+  apiKey: "AIzaSyBFE_irCt0jd6jh-61p-DqSjqZj5H542PM",
+
+  authDomain: "rc-ts-chat.firebaseapp.com",
+
+  projectId: "rc-ts-chat",
+
+  storageBucket: "rc-ts-chat.appspot.com",
+
+  messagingSenderId: "420697881660",
+
+  appId: "1:420697881660:web:b774e232fffe9578c8d739",
 };
 
-export const firebaseApp = firebase.initializeApp(firebaseConfig);
+// const firestoreSettings: FirestoreSettings & { useFetchStreams: boolean } = {
+//   useFetchStreams: false,
+// };
+const firebaseApp = initializeApp(firebaseConfig);
 
-export const db = firebaseApp.firestore();
+export const db = getFirestore(firebaseApp);
 
-export const auth = firebase.auth();
+connectFirestoreEmulator(db, "10.10.11.30", 8081);
 
-export const provider = new firebase.auth.GoogleAuthProvider();
+// const app = initializeApp(firebaseConfig);
+// const firestoreDB = initializeFirestore(app, {
+//   experimentalForceLongPolling: true,
+//   useFetchStreams: false,
+// } as any);
+// export const dbFs = getFirestore(app);

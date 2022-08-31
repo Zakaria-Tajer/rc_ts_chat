@@ -5,9 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const Header = () => {
     return (
         <SafeAreaView>
-            <View className='w-full h-fit'>
-            <View className='flex flex-row space-x-2 items-center justify-evenly h-16 bg-blue-400'>
-                <View className='w-1/4 bg-purple-400 h-full'></View>
+            <View className='w-full h-fit bg-white'>
+            <View className='flex flex-row space-x-2 items-center justify-evenly h-16'>
+                <View className='w-1/4 h-full'></View>
                 <View className='w-28 bg-gray-400 h-10 rounded-full justify-between items-center flex-row '>
                     <Text className='pl-2 font-bold'>25,68$</Text>
                     <View className='pr-4 pl-1 border-l-[1px]'>
@@ -20,7 +20,7 @@ const Header = () => {
                     <Text className='text-white'>DEMARRER</Text>
                 </View>
                 <View className=''>
-                    <Entypo name="dots-three-vertical" size={24} color="gray" />
+                    <Entypo name="dots-three-vertical" size={24} color="#d3d3d3" />
                 </View>
             </View>
         </View>

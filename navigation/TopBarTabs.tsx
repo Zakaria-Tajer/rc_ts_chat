@@ -14,7 +14,7 @@ function TopBarTabs() {
     <Tab.Navigator >
       <Tab.Screen name="CallScreen" component={CallScreen} options={{
         tabBarLabel: "APPELS",
-        tabBarLabelStyle: { fontFamily: 'Montserrat-Medium' },
+        tabBarLabelStyle: { fontFamily: 'Montserrat-Medium', fontSize: 12},
         tabBarIndicatorStyle: { backgroundColor: "#ad0808" },
         tabBarActiveTintColor: "#ad0808",
         tabBarInactiveTintColor: "black"
@@ -22,7 +22,7 @@ function TopBarTabs() {
       <Tab.Screen name="ContactScreen" component={ContactScreen}
         options={{
           tabBarLabel: "CONTACTS",
-          tabBarLabelStyle: { fontFamily: 'Montserrat-Medium', fontWeight: '600' },
+          tabBarLabelStyle: { fontFamily: 'Montserrat-Medium', fontWeight: '600',fontSize: 12 },
           tabBarIndicatorStyle: { backgroundColor: "#ad0808" },
           tabBarActiveTintColor: "#ad0808",
           tabBarInactiveTintColor: "black"
@@ -31,7 +31,7 @@ function TopBarTabs() {
       <Tab.Screen name="DiscusScreen" component={DiscusScreen}
         options={{
           tabBarLabel: "DISCUS.",
-          tabBarLabelStyle: { fontFamily: 'Montserrat-Medium' },
+          tabBarLabelStyle: { fontFamily: 'Montserrat-Medium' , fontWeight: '600',fontSize: 12},
           tabBarIndicatorStyle: { backgroundColor: "#ad0808" },
           tabBarActiveTintColor: "#ad0808",
           tabBarInactiveTintColor: "black"
@@ -40,7 +40,7 @@ function TopBarTabs() {
       <Tab.Screen name="ReunionScreen" component={ReunionScreen}
         options={{
           tabBarLabel: "REUNIONS",
-          tabBarLabelStyle: { fontFamily: 'Montserrat-Medium' },
+          tabBarLabelStyle: { fontFamily: 'Montserrat-Medium' , fontWeight: '600',fontSize: 12},
           tabBarIndicatorStyle: { backgroundColor: "#ad0808" },
           tabBarActiveTintColor: "#ad0808",
           tabBarInactiveTintColor: "black"

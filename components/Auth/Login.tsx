@@ -40,6 +40,8 @@ export const Login = () => {
     }
 
     const login = async (values: any) => {
+        console.log(values);
+
         const result = await fetch(`${API_URL}login`, {
             method: 'POST',
             headers: {
@@ -56,10 +58,9 @@ export const Login = () => {
 
             await AsyncStorage.setItem('Access_Token', Token)
 
-            setTimeout(() => {
-                dispatch(StackSwitch({ users: true }))
-
-            }, 400)
+            dispatch(StackSwitch({ users: true }))
+            // setTimeout(() => {
+            // }, 400)
         } else {
             setIsErrors(true)
         }

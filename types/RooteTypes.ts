@@ -6,4 +6,7 @@ export type RouteParams = {
   ChatScreen: {
     reciverUserId: string
   };
+  ProfileupdateScreen: {
+    contactUserId: string
+  };
 };
