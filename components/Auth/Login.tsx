@@ -40,7 +40,6 @@ export const Login = () => {
     }
 
     const login = async (values: any) => {
-        console.log(values);
 
         const result = await fetch(`${API_URL}login`, {
             method: 'POST',
@@ -52,15 +51,13 @@ export const Login = () => {
                 password: values.password,
             })
         }).then((res) => res.json())
+        .catch(err => console.log(err))
         console.log(result);
         const { Message, Token } = result
         if (Message == 'success') {
 
             await AsyncStorage.setItem('Access_Token', Token)
-
             dispatch(StackSwitch({ users: true }))
-            // setTimeout(() => {
-            // }, 400)
         } else {
             setIsErrors(true)
         }

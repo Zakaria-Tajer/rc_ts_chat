@@ -3,10 +3,9 @@ export type RouteParams = {
   HomeScreen: undefined;
   EmailVerificationScreen: undefined;
   CodeScreen: undefined;
-  ChatScreen: {
-    reciverUserId: string
+  ChatScreen: undefined;
+  usersProfile: {
+    contactUserId: string;
   };
-  ProfileupdateScreen: {
-    contactUserId: string
-  };
+  currentUserProfile: undefined;
 };

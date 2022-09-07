@@ -6,10 +6,13 @@ import { AppDispatch, RooteState } from '../../redux/store';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RouteParams } from '../../types/RooteTypes';
-import { addDoc, collection, setDoc } from 'firebase/firestore';
+import { addDoc, collection, DocumentData, query, QueryDocumentSnapshot, setDoc, where } from 'firebase/firestore';
 import { API_URL, CHAT_API_URL } from '../../types/Urls';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPressedUsers, setUsersData } from '../../redux/slices/DataSlice';
+import { db } from '../../constants/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { getUserChatDetails } from '../../redux/slices/chatSlice';
 
 
 
@@ -23,7 +26,7 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
   const currentUser = useSelector((state: RooteState) => state.dataHandler.currentUser)
 
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
-  // const [currentUser, setCurrentUser] = useState<Array<any>>([]);
+  const [email, setEmail] = useState<string>('');
 
   const userDetails = useSelector((state: RooteState) => state.dataHandler)
 
@@ -76,6 +79,18 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
 
   }
 
+  const userChatRef = query(collection(db, 'chats'), where("users", 'array-contains', currentUser))
+  const [chatsSnapShot] = useCollection(userChatRef)
+
+  const chatAlreadyExists = () =>
+    !!chatsSnapShot?.docs.find(
+      (chat: QueryDocumentSnapshot<DocumentData>) =>
+        chat.data().users.find((user: any) => user === email)?.length > 0
+    )
+
+
+  const dbRef = collection(db, 'chats')
+
   const getUserChatPressed = async (userId: string) => {
 
     const token = await AsyncStorage.getItem("Access_Token")
@@ -89,21 +104,47 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
         token
       })
     }).then((res) => res.json())
-    console.log(result);
     if (result.status == 200) {
-      dispatch(getPressedUsers({ pressedUser: result.message }))
+      setEmail(result.message.email)
+
+      const snaps = chatsSnapShot?.docs.find(
+        (chat: QueryDocumentSnapshot<DocumentData>) =>
+          chat.data().users.find((user: any) => user === result.message.email
+          ))
+
+      dispatch(getPressedUsers({ pressedUser: result.message, pressedUserEmail: result.message.email }))
+      dispatch(getUserChatDetails({
+        chatId: snaps?.id,
+        chatUsers: snaps?.data().users
+      }))
     }
 
-    navigation.navigate("ChatScreen", {
-      reciverUserId: userId
-    });
+    if (!chatAlreadyExists()) {
+      addDoc(dbRef, {
+        users: [currentUser, email]
+      })
+        .then(res => {
+          console.log(`new DocumentData: ${res.id}`)
+        })
+        .catch(err => console.log(err))
+    } else {
+      console.log('Already added');
+
+    }
+
+    navigation.navigate("ChatScreen");
+
 
   }
 
+
+
   const getUserProfile = (UserId: string) => {
-    navigation.navigate("ProfileupdateScreen", {
+
+    navigation.navigate("usersProfile", {
       contactUserId: UserId
     })
+
   }
 
 
@@ -187,3 +228,9 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
 }
 
 export default CallScreen
+
+
+
+
+
+

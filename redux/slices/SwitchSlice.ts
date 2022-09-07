@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ChatUsersDetailsFirestore } from "../../interfaces/Data";
 import { StackSwitching } from "../../interfaces/Switch";
 
 export const initialState: StackSwitching = {
@@ -6,6 +7,7 @@ export const initialState: StackSwitching = {
   users: false,
   VerificationScreen: false,
   verificationCode: "",
+
 };
 
 export const switchSlice = createSlice({

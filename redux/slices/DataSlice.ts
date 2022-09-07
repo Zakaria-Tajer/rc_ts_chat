@@ -5,6 +5,8 @@ export const initialState: AllUsersData = {
   users: [],
   currentUser: '',
   pressedUser: [],
+  pressedUserEmail: '',
+  currentUserId: ''
 };
 
 export const switchSlice = createSlice({
@@ -14,9 +16,12 @@ export const switchSlice = createSlice({
     setUsersData: (state, action: PayloadAction<AllUsersData>) => {
       state.users = action.payload.users;
       state.currentUser = action.payload.currentUser;
+      state.currentUserId = action.payload.currentUserId;
     },
     getPressedUsers: (state, action: PayloadAction<AllUsersData>) => {
       state.pressedUser = action.payload.pressedUser;
+      state.pressedUserEmail = action.payload.pressedUserEmail;
+
     }
 
   },

@@ -11,7 +11,8 @@ import { useEffect } from 'react';
 import { isValidBool, isValidUser } from '../constants/isValidUser';
 import { StackSwitch } from '../redux/slices/SwitchSlice';
 import ChatScreen from '../screens/AppScreens/ChatScreen';
-import ProfileupdateScreen from '../screens/AppScreens/ProfileupdateScreen';
+import OtherUsersProfiles from '../screens/AppScreens/usersContactsTabs/UsersProfile';
+import CurrUserProfileScreen from '../screens/AppScreens/currentUserTabs/CurrUserProfileScreen';
 
 
 
@@ -54,7 +55,11 @@ export function SignedInStack() {
         headerShown: false,
         animation: 'slide_from_right',
       }} />
-      <Stack.Screen name="ProfileupdateScreen" component={ProfileupdateScreen} options={{
+      <Stack.Screen name="usersProfile" component={OtherUsersProfiles} options={{
+        headerShown: false,
+        animation: 'slide_from_right',
+      }} />
+      <Stack.Screen name="currentUserProfile" component={CurrUserProfileScreen} options={{
         headerShown: false,
         animation: 'slide_from_right',
       }}

@@ -2,6 +2,8 @@ export interface AllUsersData {
   users?: Array<any>;
   pressedUser?: Array<any>;
   currentUser?: string;
+  pressedUserEmail?: string;
+  currentUserId? : string;
 }
 
 export interface ChatProps {
@@ -19,4 +21,16 @@ export interface ChatUserDetails {
   isValidate?: string;
   phoneNumber?: number;
   password?: string;
+}
+
+
+
+export interface ChatUsersDetailsFirestore {
+  chatId?: any;
+  chatUsers?: any[];
+
+}
+
+export interface ChatDetails extends ChatUsersDetailsFirestore {
+  messagesArray?: any;
 }

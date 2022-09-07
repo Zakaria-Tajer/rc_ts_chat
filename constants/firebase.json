@@ -1,16 +1,30 @@
 {
-    "emulators": {
-        "functions": {
-          "port": 5001,
-          "host": "0.0.0.0"
-        },
-        "firestore": {
-          "port": 8080,
-          "host": "0.0.0.0"
-        },
-        "auth": {
-          "port": 9099,
-          "host": "0.0.0.0"
-        }
-      }
+  "emulators": {
+    "auth": {
+      "port": 9099,
+      "host": "0.0.0.0"
+    },
+    "functions": {
+      "port": 5001,
+      "host": "0.0.0.0"
+    },
+    "firestore": {
+      "port": 8080,
+      "host": "0.0.0.0"
+    },
+    "database": {
+      "port": 9000,
+      "host": "0.0.0.0"
+    },
+    "ui": {
+      "enabled": true
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "database": {
+    "rules": "database.rules.json"
+  }
 }
