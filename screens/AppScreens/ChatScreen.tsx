@@ -1,21 +1,18 @@
-import { View, Text, Image, TextInput, Pressable } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, Image, TextInput, Pressable, ScrollView, ScrollViewProps } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { AntDesign, Feather, Octicons } from '@expo/vector-icons';
-import Messenger from '../../components/Chat/Messenger';
-import Reciver from '../../components/Chat/Reciver';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { RouteParams } from '../../types/RooteTypes';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChatUserDetails } from '../../interfaces/Data';
-import { addDoc, collection, doc, DocumentData, getDoc, onSnapshot, orderBy, query, QuerySnapshot, serverTimestamp, setDoc, Timestamp } from "firebase/firestore";
-import { AppDispatch, RooteState } from '../../redux/store';
-import { useDispatch, useSelector } from 'react-redux';
+import { addDoc, collection, doc, DocumentData, getDoc, onSnapshot, orderBy, query, QueryDocumentSnapshot, QuerySnapshot, serverTimestamp, setDoc, Timestamp } from "firebase/firestore";
+import { RooteState } from '../../redux/store';
+import { useSelector } from 'react-redux';
 import { db } from '../../constants/firebase';
 import getRecipientEmail from '../../utils/getRecipientEmail';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import Message from '../../components/Chat/Message';
-import { getChatDetails } from '../../redux/slices/chatSlice';
 
 
 type ProfileProps = NativeStackScreenProps<RouteParams, 'ChatScreen'>;
@@ -24,32 +21,29 @@ type ProfileProps = NativeStackScreenProps<RouteParams, 'ChatScreen'>;
 const ChatScreen = ({ route }: ProfileProps) => {
 
 
-    const dispatch: AppDispatch = useDispatch()
     const [message, setMessage] = useState<string>('')
     const [userDetails, setUserDetails] = useState<any>([]);
     const [allMsgs, setAllMsgs] = useState<any>([]);
     let arrUserDetails: any = []
-    const snapArray: any = []
+    let snapArray: any = []
 
-    const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit'
-
+    const scrollRef = useRef<ScrollView | null>(null)
     const navigation = useNavigation<NativeStackNavigationProp<RouteParams>>()
     const currentUser = useSelector((state: RooteState) => state.dataHandler)
     const pressedUser = useSelector((state: RooteState) => state.dataHandler)
     const chatData = useSelector((state: RooteState) => state.chatHandler)
-    // const MessagesArray = chatData.messagesArray
     const NavigateBack = () => {
         navigation.navigate("HomeScreen")
     }
 
 
-    const ref = doc(collection(db, "chats"), chatData.chatId)
+    const ref = doc(collection(db, "chats"), `${chatData.chatId}`)
     const messagesRes = query(collection(ref, "messages"), orderBy('timestamp', "asc"))
 
     const getChat = async () => {
 
-        onSnapshot(messagesRes, snapshot => {
-            snapshot.docs.map((doc) => ({
+        onSnapshot(messagesRes, (snapshot: QuerySnapshot<DocumentData>) => {
+            snapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
                 id: doc.id,
                 ...doc.data()
             })).map((msg) => {
@@ -101,7 +95,7 @@ const ChatScreen = ({ route }: ProfileProps) => {
                 />
             ))
         } else {
-            snapArray.map((message: any) => (
+            snapArray?.map((message: any) => (
                 <Message
                     key={message.id}
                     user={message.data().user}
@@ -117,9 +111,7 @@ const ChatScreen = ({ route }: ProfileProps) => {
 
     const sendMessage = async () => {
         const groupeCollections = collection(ref, "messages")
-        // console.log(pressedUser.pressedUserEmail, currentUser);
         setDoc(doc(collection(db, "users"), currentUser.currentUserId), {
-            // email: currentUser.currentUserId,
             lastSeen: serverTimestamp()
         }, { merge: true })
             .then((res) => console.log(res))
@@ -142,7 +134,7 @@ const ChatScreen = ({ route }: ProfileProps) => {
     return (
         <SafeAreaView>
             <View className='bg-gray-200 h-full relative'>
-                <View className='w-full bg-white h-20 justify-center pl-4'>
+                <View className='w-full bg-white  py-2 justify-center pl-4'>
                     <View className='flex-row items-center space-x-3'>
                         <Pressable onPress={NavigateBack}>
                             <AntDesign name="arrowleft" size={28} color="black" />
@@ -164,35 +156,24 @@ const ChatScreen = ({ route }: ProfileProps) => {
                     </View>
                 </View>
 
-                <View className='space-y-4 mt-5'>
-
-
+                <ScrollView
+                    className='mb-4 h-[50%] '
+                    ref={scrollRef}
+                    onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })
+                    }>
                     <>
-                        {/* {messagesArray?.map((message: any) => (
-                            <Message key={message.id} user={message.data().user} message={{
-                                ...message.data(),
-                                timestamp: message.data().timestamp?.toDate().getTime()
-                            }} />
-                        ))} */}
-                        {/* <Message /> */}
                         {showMessage()}
                     </>
+                </ScrollView>
 
-
-
-                    <View className='items-center'>
-                        <Text className='py-1 px-3 rounded-full bg-gray-400' style={{ fontFamily: 'Montserrat-Medium' }}>Hier</Text>
-                    </View>
-
-                </View>
-
-                <View className='absolute items-center  flex-row justify-evenly bottom-0 bg-white w-full h-24 border-t-[1px] border-gray-300'>
+                <View className='items-center  flex-row justify-evenly bg-white w-full h-fit py-4 border-t-[1px] border-gray-300'>
                     <View className='relative w-3/4'>
                         <TextInput
                             placeholder='Redigez un message...'
                             className=' w-full py-4 rounded-full pl-5 text-md border-[1px] border-gray-200'
                             style={{ fontFamily: 'Montserrat-Medium' }}
                             onChangeText={e => setMessage(e)}
+                            value={message}
                         />
                         <View className='absolute right-6 top-4'>
                             <Feather name="paperclip" size={28} color="gray" />
