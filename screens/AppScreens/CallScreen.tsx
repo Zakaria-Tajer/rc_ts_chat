@@ -3,8 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Feather, AntDesign, Entypo, FontAwesome, Octicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RooteState } from '../../redux/store';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RouteParams } from '../../types/RooteTypes';
 import { addDoc, collection, DocumentData, query, QueryDocumentSnapshot, setDoc, where } from 'firebase/firestore';
 import { API_URL, CHAT_API_URL } from '../../types/Urls';
@@ -75,8 +74,20 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
 
 
 
-  const handleSearch = (keyword: string) => {
-
+  const handleSearch = async (keyword: string) => {
+    console.log(keyword);
+    
+    const result = await fetch(`${API_URL}searchProfile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        searchedKeyword: keyword
+      })
+    }).then((res) => res.json())
+    console.log(result);
+    
   }
 
   const userChatRef = query(collection(db, 'chats'), where("users", 'array-contains', currentUser))
@@ -182,7 +193,7 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
                       </View>
                     </Pressable>
                     <View className='space-y-1'>
-                      <Text className='text-[17px]' style={{ fontFamily: 'Montserrat-Medium' }}>{item.firstName}{" "}{item.lastName}</Text>
+                      <Text className='text-base' style={{ fontFamily: 'Montserrat-Medium' }}>{item.firstName}{" "}{item.lastName}</Text>
                       <Text className='' style={{ fontFamily: 'Montserrat-Medium' }}>{item.nums} <Text className='underline underline-offset-8 text-red-600'>Numero Sip</Text></Text>
                     </View>
                   </View>
@@ -203,18 +214,18 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
           )}
         />
       </View>
-      <View className='h-1/6 flex-1 space-x-8 items-center  justify-center flex-row'>
+      <View className='h-1/6 space-x-8 items-center  justify-center flex-row'>
         <View>
           <Octicons name="three-bars" size={30} color="gray" />
         </View>
         <TouchableOpacity>
-          <View className='px-6 py-5 rounded-full'>
-            <MaterialCommunityIcons name="video-outline" size={36} color="#ad0808" />
+          <View className='px-5 py-5 rounded-full'>
+            <MaterialCommunityIcons name="video-outline" size={30} color="#ad0808" />
           </View>
         </TouchableOpacity>
         <TouchableOpacity >
           <View className='px-5 py-4 rounded-full bg-[#ad0808]'>
-            <FontAwesome name="phone" size={36} color="white" />
+            <FontAwesome name="phone" size={30} color="white" />
           </View>
         </TouchableOpacity>
         <View>

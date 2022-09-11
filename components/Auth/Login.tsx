@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     inputsPlaceholder: {
-        fontSize: 18,
+        fontSize: 16,
         fontFamily: 'Montserrat-Medium'
     },
     errorMsg: {

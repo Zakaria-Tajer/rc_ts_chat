@@ -1,31 +1,37 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { AllUsersData } from "../../interfaces/Data";
+import { AllUsersData, listOfData } from "../../interfaces/Data";
 
-export const initialState: AllUsersData = {
+export const initialState: listOfData = {
   users: [],
   currentUser: '',
   pressedUser: [],
   pressedUserEmail: '',
-  currentUserId: ''
+  currentUserId: '',
+  fileMimeType: '',
+  AudioId: ''
 };
 
 export const switchSlice = createSlice({
   name: "data",
   initialState,
   reducers: {
-    setUsersData: (state, action: PayloadAction<AllUsersData>) => {
+    setUsersData: (state, action: PayloadAction<listOfData>) => {
       state.users = action.payload.users;
       state.currentUser = action.payload.currentUser;
       state.currentUserId = action.payload.currentUserId;
     },
-    getPressedUsers: (state, action: PayloadAction<AllUsersData>) => {
+    getPressedUsers: (state, action: PayloadAction<listOfData>) => {
       state.pressedUser = action.payload.pressedUser;
       state.pressedUserEmail = action.payload.pressedUserEmail;
 
+    },
+    uploadedFilesData: (state, action: PayloadAction<listOfData>) => {
+      state.fileMimeType = action.payload.fileMimeType;
+      state.AudioId = action.payload.AudioId;
     }
 
   },
 });
 
-export const { setUsersData,getPressedUsers } = switchSlice.actions;
+export const { setUsersData,getPressedUsers,uploadedFilesData } = switchSlice.actions;
 export default switchSlice.reducer;

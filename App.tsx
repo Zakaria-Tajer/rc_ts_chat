@@ -4,6 +4,8 @@ import { Provider } from 'react-redux';
 import { TailwindProvider } from 'tailwindcss-react-native';
 import { RootNavigator } from './navigation';
 import { store } from './redux/store';
+import { useEffect } from 'react'
+
 
 export default function App() {
 
@@ -11,7 +13,7 @@ export default function App() {
     "Montserrat-Medium": require('./assets/fonts/Montserrat-Medium.ttf')
   })
   if (!fontsLoaded) return null
-
+ 
 
   return (
     <Provider store={store}>

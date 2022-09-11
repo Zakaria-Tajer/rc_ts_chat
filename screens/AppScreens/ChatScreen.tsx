@@ -1,4 +1,4 @@
-import { View, Text, Image, TextInput, Pressable, ScrollView, ScrollViewProps } from 'react-native'
+import { View, Text, Image, TextInput, Pressable, ScrollView } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { AntDesign, Feather, Octicons } from '@expo/vector-icons';
@@ -7,12 +7,20 @@ import { RouteParams } from '../../types/RooteTypes';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChatUserDetails } from '../../interfaces/Data';
 import { addDoc, collection, doc, DocumentData, getDoc, onSnapshot, orderBy, query, QueryDocumentSnapshot, QuerySnapshot, serverTimestamp, setDoc, Timestamp } from "firebase/firestore";
-import { RooteState } from '../../redux/store';
-import { useSelector } from 'react-redux';
-import { db } from '../../constants/firebase';
+import { AppDispatch, RooteState } from '../../redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { db, storage } from '../../constants/firebase';
 import getRecipientEmail from '../../utils/getRecipientEmail';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import Message from '../../components/Chat/Message';
+import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
+import { addFileFirestore, convertToBlob } from '../../utils/StorageFiles';
+import * as DocumentPicker from 'expo-document-picker';
+import { getDownloadURL, listAll, ref, StorageReference, getBlob, uploadBytes } from "firebase/storage";
+import { uploadedFilesData } from '../../redux/slices/DataSlice';
+
+
 
 
 type ProfileProps = NativeStackScreenProps<RouteParams, 'ChatScreen'>;
@@ -20,7 +28,7 @@ type ProfileProps = NativeStackScreenProps<RouteParams, 'ChatScreen'>;
 
 const ChatScreen = ({ route }: ProfileProps) => {
 
-
+    const dispatch: AppDispatch = useDispatch()
     const [message, setMessage] = useState<string>('')
     const [userDetails, setUserDetails] = useState<any>([]);
     const [allMsgs, setAllMsgs] = useState<any>([]);
@@ -32,20 +40,26 @@ const ChatScreen = ({ route }: ProfileProps) => {
     const currentUser = useSelector((state: RooteState) => state.dataHandler)
     const pressedUser = useSelector((state: RooteState) => state.dataHandler)
     const chatData = useSelector((state: RooteState) => state.chatHandler)
+
+    const [filesList, setFilesList] = useState<any>([])
+
+
+
     const NavigateBack = () => {
         navigation.navigate("HomeScreen")
     }
 
 
-    const ref = doc(collection(db, "chats"), `${chatData.chatId}`)
-    const messagesRes = query(collection(ref, "messages"), orderBy('timestamp', "asc"))
+    const reference = doc(collection(db, "chats"), `${chatData.chatId}`)
+    const messagesRes = query(collection(reference, "messages"), orderBy('timestamp', "asc"))
 
     const getChat = async () => {
 
         onSnapshot(messagesRes, (snapshot: QuerySnapshot<DocumentData>) => {
             snapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
                 id: doc.id,
-                ...doc.data()
+                ...doc.data(),
+                
             })).map((msg) => {
                 snapArray.push(
                     {
@@ -54,11 +68,12 @@ const ChatScreen = ({ route }: ProfileProps) => {
                     }
                 )
                 setAllMsgs(snapArray)
-
+                console.log(snapArray);
+                
             })
         })
 
-        const chatRes = await getDoc(ref)
+        const chatRes = await getDoc(reference)
         const chat = {
             id: chatRes.id,
             ...chatRes.data()
@@ -68,13 +83,54 @@ const ChatScreen = ({ route }: ProfileProps) => {
 
     }
 
+    const uploadFiles = async () => {
+
+        const doc = await DocumentPicker.getDocumentAsync({
+            type: '*/*',
+
+        })
+        const { name, mimeType, uri } = doc as DocumentPicker.DocumentResult | any
+        const metaData = {
+            contentType: mimeType,
+        }
+        
+        const fileRef = ref(storage, `files/${chatData.chatId}-${name}`);
+        const uploaded = await uploadBytes(fileRef, await convertToBlob(uri), metaData)
+        if (uploaded) {
+            console.log(metaData.contentType);
+            dispatch(uploadedFilesData({ fileMimeType: metaData.contentType}))
+            getDownloadURL(uploaded.ref).then(async (url) => {
+                const filesGroupeCollections = collection(reference, "messages")
+                // !try to shorten the code
+                await addFileFirestore(filesGroupeCollections, url, currentUser.currentUser, metaData.contentType)
+            })
+
+        }
+    }
+
+
+    const getListOfUploadedFiles = () => {
+
+
+        const filesRef = ref(storage, "files/")
+        listAll(filesRef).then((res) => {
+            console.log(res);
+
+        })
+    }
+
+
+
     useEffect(() => {
         getChat()
+        getListOfUploadedFiles()
+
 
         arrUserDetails.push(pressedUser.pressedUser);
         setUserDetails(arrUserDetails);
+        // console.log(filesList);
 
-    }, [currentUser.currentUser])
+    }, [currentUser.currentUser, filesList])
 
     const recipientEmail = getRecipientEmail(chatData.chatUsers, currentUser.currentUser)
     const [messagesSnapshot] = useCollection(messagesRes)
@@ -91,7 +147,9 @@ const ChatScreen = ({ route }: ProfileProps) => {
                         ...message.data(),
                         timestamp: message.data().timestamp?.toDate().getTime(),
                     }}
-
+                    messageType={message.data().messageType}
+                    MessageKey={message.id}
+                // !type: message.data().type
                 />
             ))
         } else {
@@ -103,14 +161,16 @@ const ChatScreen = ({ route }: ProfileProps) => {
                         ...message.data(),
                         timestamp: message.data().timestamp?.toDate().getTime(),
                     }}
-
+                    messageType={message.data().messageType}
+                    MessageKey={message.id}
+                // !type: message.data().type
                 />
             ))
         }
     }
 
     const sendMessage = async () => {
-        const groupeCollections = collection(ref, "messages")
+        const groupeCollections = collection(reference, "messages")
         setDoc(doc(collection(db, "users"), currentUser.currentUserId), {
             lastSeen: serverTimestamp()
         }, { merge: true })
@@ -122,12 +182,16 @@ const ChatScreen = ({ route }: ProfileProps) => {
             timestamp: serverTimestamp(),
             message: message,
             user: currentUser.currentUser,
+            messageType: 'string'
         }).then((res) => console.log(res))
             .catch((err) => console.log(err))
 
 
         setMessage("")
     }
+
+
+
 
 
 
@@ -176,10 +240,12 @@ const ChatScreen = ({ route }: ProfileProps) => {
                             value={message}
                         />
                         <View className='absolute right-6 top-4'>
-                            <Feather name="paperclip" size={28} color="gray" />
+                            <Pressable onPress={uploadFiles}>
+                                <Feather name="paperclip" size={28} color="gray" />
+                            </Pressable>
                         </View>
                     </View>
-                    <Pressable onPress={sendMessage} disabled={!message}>
+                    <Pressable onPress={sendMessage} >
                         <View className='py-4 px-4 bg-[#ad0808] rounded-full items-center justify-center'>
                             <Octicons name="paper-airplane" size={24} color="white" />
                         </View>

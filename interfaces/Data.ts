@@ -3,7 +3,7 @@ export interface AllUsersData {
   pressedUser?: Array<any>;
   currentUser?: string;
   pressedUserEmail?: string;
-  currentUserId? : string;
+  currentUserId?: string;
 }
 
 export interface ChatProps {
@@ -23,14 +23,16 @@ export interface ChatUserDetails {
   password?: string;
 }
 
-
-
 export interface ChatUsersDetailsFirestore {
   chatId?: any;
   chatUsers?: any[];
-
 }
 
 export interface ChatDetails extends ChatUsersDetailsFirestore {
   messagesArray?: any;
+}
+
+export interface listOfData extends AllUsersData {
+  fileMimeType?: string;
+  AudioId?: string;
 }
