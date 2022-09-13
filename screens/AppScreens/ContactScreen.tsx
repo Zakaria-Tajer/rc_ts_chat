@@ -29,6 +29,8 @@ const ContactScreen = ({ route, navigation }: ProfileProps) => {
   const [email, setEmail] = useState<string>('');
   const userDetails = useSelector((state: RooteState) => state.dataHandler)
   const [userSearchError, setUserSearchError] = useState<boolean>(false);
+  const [imagesData, setImagesData] = useState<any>([])
+
   const dispatch: AppDispatch = useDispatch()
 
 
@@ -50,8 +52,36 @@ const ContactScreen = ({ route, navigation }: ProfileProps) => {
 
 
 
+
+
+  const usersQuery = query(collection(db, "users"), where("email", "!=", currentUser))
+  const [messagesSnapshot] = useCollection(usersQuery)
+
+  const getAllProfilePicture = async () => {
+    const snaps = messagesSnapshot?.docs.find((user) => {
+      return user.data()
+    })
+    // console.log(snaps?.data()?.profilePicture);
+    if (snaps?.data()?.profilePicture === undefined || snaps?.data()?.profilePicture == "") {
+      setImagesData(
+        {
+          profilePicture: "",
+          email: snaps?.data()?.email
+        }
+      )
+    } else {
+      setImagesData(
+        {
+          profilePicture: snaps?.data()?.profilePicture,
+          email: snaps?.data()?.email
+        }
+      )
+    }
+  }
+
   useEffect(() => {
     getCurrentUser()
+    getAllProfilePicture()
     // const keyboardDidShowListener = Keyboard.addListener(
     //   'keyboardDidShow',
     //   () => {
@@ -111,7 +141,7 @@ const ContactScreen = ({ route, navigation }: ProfileProps) => {
 
   const dbRef = collection(db, 'chats')
 
-  const getUserChatPressed = async (userId: string) => {
+  const getUserChatPressed = async (userId: string, profileImage: any) => {
 
     const token = await AsyncStorage.getItem("Access_Token")
     const result = await fetch(`${CHAT_API_URL}getDetails`, {
@@ -152,17 +182,23 @@ const ContactScreen = ({ route, navigation }: ProfileProps) => {
 
     }
 
-    navigation.navigate("ChatScreen");
+    navigation.navigate("ChatScreen", {
+      imageProfileUrl: profileImage
+    });
 
 
   }
 
 
 
-  const getUserProfile = (UserId: string) => {
+  const getUserProfile = (UserId: string, profileImage: string, firstName: string, lastName: string, email: string) => {
 
     navigation.navigate("usersProfile", {
-      contactUserId: UserId
+      contactUserId: UserId,
+      imageProfileUrl: profileImage,
+      firstName: firstName,
+      lastName: lastName,
+      email: email
     })
 
   }
@@ -180,8 +216,8 @@ const ContactScreen = ({ route, navigation }: ProfileProps) => {
         />
         <View className='absolute right-10 flex-row space-x-4 items-center'>
           {searchInput.length == 0 ?
-              <Text></Text>
-          : (
+            <Text></Text>
+            : (
               <>
                 {searchedProfile.length !== 0 ? <Text className='text-gray-400'>
                   {
@@ -210,14 +246,14 @@ const ContactScreen = ({ route, navigation }: ProfileProps) => {
                   data={searchedProfile}
                   renderItem={({ item }) => (
                     <ScrollView style={{ width: '100%' }}>
-                      <Pressable onPress={() => getUserChatPressed(item._id)}>
+                      <Pressable onPress={() => getUserChatPressed(item._id, item.ProfileImage)}>
                         <View className='flex-row justify-between mb-2 border-b-2 border-gray-300 py-3'>
                           <View className='flex-row items-center space-x-2'>
-                            <Pressable onPress={() => getUserProfile(item._id)}>
+                            <Pressable key={item._id} onPress={() => getUserProfile(item._id, item.ProfileImage, item.firstName, item.lastName, item.email)}>
                               <View className='w-12 h-12 bg-white ml-4 mt-2 rounded-full'>
                                 <Image
-                                  source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
-                                  className='w-fit h-full object-contain'
+                                  source={{ uri: item.ProfileImage ? item.ProfileImage : 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
+                                  className='w-fit rounded-full h-full object-contain'
                                 />
                               </View>
                             </Pressable>
@@ -248,14 +284,14 @@ const ContactScreen = ({ route, navigation }: ProfileProps) => {
                   data={userDetails.users}
                   renderItem={({ item }) => (
                     <ScrollView style={{ width: '100%' }}>
-                      <Pressable onPress={() => getUserChatPressed(item._id)}>
+                      <Pressable onPress={() => getUserChatPressed(item._id, item.ProfileImage)}>
                         <View className='flex-row justify-between mb-2 border-b-2 border-gray-300 py-3'>
                           <View className='flex-row items-center space-x-2'>
-                            <Pressable onPress={() => getUserProfile(item._id)}>
+                            <Pressable key={item._id} onPress={() => getUserProfile(item._id, item.ProfileImage, item.firstName, item.lastName, item.email)}>
                               <View className='w-12 h-12 bg-white ml-4 mt-2 rounded-full'>
                                 <Image
-                                  source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
-                                  className='w-fit h-full object-contain'
+                                  source={{ uri: item.ProfileImage ? item.ProfileImage : 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
+                                  className='w-fit rounded-full h-full object-contain'
                                 />
                               </View>
                             </Pressable>

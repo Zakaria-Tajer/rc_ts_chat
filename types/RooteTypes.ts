@@ -3,9 +3,15 @@ export type RouteParams = {
   HomeScreen: undefined;
   EmailVerificationScreen: undefined;
   CodeScreen: undefined;
-  ChatScreen: undefined;
+  ChatScreen: {
+    imageProfileUrl: undefined;
+  };
   usersProfile: {
     contactUserId: string;
+    imageProfileUrl: string;
+    firstName: string;
+    lastName: string;
+    email: string;
   };
   currentUserProfile: undefined;
 };

@@ -4,6 +4,8 @@ export interface AllUsersData {
   currentUser?: string;
   pressedUserEmail?: string;
   currentUserId?: string;
+  currentUserProfilePicture?: any;
+  dataArrayPairs?: any
 }
 
 export interface ChatProps {

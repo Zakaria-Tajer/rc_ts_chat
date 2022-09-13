@@ -1,22 +1,19 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import TopBarTabs from '../navigation/TopBarTabs'
 import Header from '../components/Header'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { API_URL } from '../types/Urls'
-import { AppDispatch } from '../redux/store'
-import { useDispatch } from 'react-redux'
+import { AppDispatch, RooteState } from '../redux/store'
+import { useDispatch, useSelector } from 'react-redux'
 import { setUsersData } from '../redux/slices/DataSlice'
-import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { collection, doc, DocumentData, getDoc, onSnapshot, QueryDocumentSnapshot, QuerySnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '../constants/firebase'
-import firebase from 'firebase/compat/app'
 
 const HomeScreen = () => {
   const dispatch: AppDispatch = useDispatch()
 
-  
   const getUsers = async () => {
     const token = await AsyncStorage.getItem('Access_Token')
-    console.log(token);
 
     const result = await fetch(`${API_URL}getAllUsers`, {
       method: 'POST',
@@ -27,25 +24,29 @@ const HomeScreen = () => {
         jwttoken: token
       })
     }).then((res) => res.json())
+    console.log("HomseScreen", result);
+    
+    const data = await getDoc(doc(collection(db, "users"), `${result.currentUserId}`))
+
     if (result.status == 200) {
-
-      setDoc(doc(db, "users", result.currentUserId), {
+      setDoc(doc(db, "users", `${result.currentUserId}`), {
         email: result.currentUserEmail,
-        lastSeen: serverTimestamp()
+        lastSeen: serverTimestamp(),
+        profilePicture: data?.data()?.profilePicture ? data.data()?.profilePicture : ""
       }, { merge: true })
-        .then((res) => console.log(res))
+        .then((res) => {
+          console.log(res);
+          
+        })
         .catch((err) => console.log(err))
-
-      dispatch(setUsersData({ users: result.msg, currentUser: result.currentUserEmail, currentUserId: result.currentUserId }))
-
     }
 
+    dispatch(setUsersData({ users: result.msg, currentUserId: result.currentUserId, currentUser: result.currentUserEmail }))
   }
 
 
   useEffect(() => {
     getUsers()
-
 
   }, [])
 

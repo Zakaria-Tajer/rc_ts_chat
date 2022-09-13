@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RooteState } from '../../redux/store';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RouteParams } from '../../types/RooteTypes';
-import { addDoc, collection, DocumentData, query, QueryDocumentSnapshot, setDoc, where } from 'firebase/firestore';
+import { addDoc, collection, doc, DocumentData, getDoc, onSnapshot, query, QueryDocumentSnapshot, QuerySnapshot, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { API_URL, CHAT_API_URL } from '../../types/Urls';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPressedUsers, setUsersData } from '../../redux/slices/DataSlice';
@@ -23,35 +23,66 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
 
   const textInputRef = useRef<TextInput>(null)
   const currentUser = useSelector((state: RooteState) => state.dataHandler.currentUser)
-
+  const currentUserId = useSelector((state: RooteState) => state.dataHandler.currentUserId)
   const [isKeyboardVisible, setKeyboardVisible] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
-
+  const [imagesData, setImagesData] = useState<any>([])
   const userDetails = useSelector((state: RooteState) => state.dataHandler)
 
+  const imagesDataArray: Array<any> = []
   const dispatch: AppDispatch = useDispatch()
 
-
-
   const getCurrentUser = async () => {
-    console.log(userDetails.currentUser);
-
     const result = await fetch(`${CHAT_API_URL}getDetails`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        id: userDetails.currentUser
+        id: userDetails.currentUserId!
       })
     }).then((res) => res.json())
-    console.log(result);
+    // console.log("current user Result", result);
+
+
+
+  }
+
+
+  const usersQuery = query(collection(db, "users"), where("email", "!=", currentUser))
+  const [messagesSnapshot] = useCollection(usersQuery)
+
+  const getAllProfilePicture = async () => {
+    const snaps = messagesSnapshot?.docs.find((user) => {
+      return user.data()
+    })
+    // console.log(snaps?.data()?.profilePicture);
+    if (snaps?.data()?.profilePicture === undefined || snaps?.data()?.profilePicture == "") {
+      setImagesData(
+        {
+          profilePicture: "",
+          email: snaps?.data()?.email
+        }
+      )
+    } else {
+      setImagesData(
+        {
+          profilePicture: snaps?.data()?.profilePicture,
+          email: snaps?.data()?.email
+        }
+      )
+    }
   }
 
 
 
+
+
   useEffect(() => {
+    getAllProfilePicture()
     getCurrentUser()
+    // updateInfos()
+    // getProfilePic()
     // const keyboardDidShowListener = Keyboard.addListener(
     //   'keyboardDidShow',
     //   () => {
@@ -70,13 +101,15 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
     //   keyboardDidHideListener.remove();
     //   keyboardDidShowListener.remove();
     // };
-  }, []);
+  }, [currentUserId]);
 
+
+  console.log(imagesData);
 
 
   const handleSearch = async (keyword: string) => {
     console.log(keyword);
-    
+
     const result = await fetch(`${API_URL}searchProfile`, {
       method: 'POST',
       headers: {
@@ -87,7 +120,7 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
       })
     }).then((res) => res.json())
     console.log(result);
-    
+
   }
 
   const userChatRef = query(collection(db, 'chats'), where("users", 'array-contains', currentUser))
@@ -102,7 +135,7 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
 
   const dbRef = collection(db, 'chats')
 
-  const getUserChatPressed = async (userId: string) => {
+  const getUserChatPressed = async (userId: string, profileImage: any) => {
 
     const token = await AsyncStorage.getItem("Access_Token")
     const result = await fetch(`${CHAT_API_URL}getDetails`, {
@@ -143,17 +176,23 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
 
     }
 
-    navigation.navigate("ChatScreen");
+    navigation.navigate("ChatScreen", {
+      imageProfileUrl: profileImage
+    });
 
 
   }
 
 
 
-  const getUserProfile = (UserId: string) => {
+  const getUserProfile = (UserId: string, profileImage: string, firstName: string, lastName: string, email: string) => {
 
     navigation.navigate("usersProfile", {
-      contactUserId: UserId
+      contactUserId: UserId,
+      imageProfileUrl: profileImage,
+      firstName: firstName,
+      lastName: lastName,
+      email: email
     })
 
   }
@@ -181,14 +220,14 @@ const CallScreen = ({ route, navigation }: ProfileProps) => {
           data={userDetails.users}
           renderItem={({ item }) => (
             <ScrollView style={{ width: '100%' }}>
-              <Pressable onPress={() => getUserChatPressed(item._id)}>
+              <Pressable onPress={() => getUserChatPressed(item._id, item.ProfileImage)}>
                 <View className='flex-row justify-between mb-2 border-b-2 border-gray-300 py-3'>
                   <View className='flex-row items-center space-x-2'>
-                    <Pressable onPress={() => getUserProfile(item._id)}>
+                    <Pressable key={item._id} onPress={() => getUserProfile(item._id, item.ProfileImage, item.firstName, item.lastName, item.email)}>
                       <View className='w-12 h-12 bg-white ml-4 mt-2 rounded-full'>
                         <Image
-                          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
-                          className='w-fit h-full object-contain'
+                          source={{ uri: item.ProfileImage  ? item.ProfileImage : 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
+                          className='w-fit rounded-full h-full object-contain'
                         />
                       </View>
                     </Pressable>

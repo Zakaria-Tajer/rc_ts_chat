@@ -6,25 +6,21 @@ import { useNavigation } from '@react-navigation/native';
 import { RouteParams } from '../../types/RooteTypes';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChatUserDetails } from '../../interfaces/Data';
-import { addDoc, collection, doc, DocumentData, getDoc, onSnapshot, orderBy, query, QueryDocumentSnapshot, QuerySnapshot, serverTimestamp, setDoc, Timestamp } from "firebase/firestore";
+import { addDoc, collection, doc, DocumentData, getDoc, onSnapshot, orderBy, query, QueryDocumentSnapshot, QuerySnapshot, serverTimestamp, setDoc, Timestamp, where } from "firebase/firestore";
 import { AppDispatch, RooteState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { db, storage } from '../../constants/firebase';
 import getRecipientEmail from '../../utils/getRecipientEmail';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import Message from '../../components/Chat/Message';
-import * as FileSystem from 'expo-file-system';
-import * as ImagePicker from 'expo-image-picker';
 import { addFileFirestore, convertToBlob } from '../../utils/StorageFiles';
 import * as DocumentPicker from 'expo-document-picker';
-import { getDownloadURL, listAll, ref, StorageReference, getBlob, uploadBytes } from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { uploadedFilesData } from '../../redux/slices/DataSlice';
 
 
 
-
 type ProfileProps = NativeStackScreenProps<RouteParams, 'ChatScreen'>;
-
 
 const ChatScreen = ({ route }: ProfileProps) => {
 
@@ -41,7 +37,7 @@ const ChatScreen = ({ route }: ProfileProps) => {
     const pressedUser = useSelector((state: RooteState) => state.dataHandler)
     const chatData = useSelector((state: RooteState) => state.chatHandler)
 
-    const [filesList, setFilesList] = useState<any>([])
+    // const [filesList, setFilesList] = useState<any>([])
 
 
 
@@ -59,7 +55,7 @@ const ChatScreen = ({ route }: ProfileProps) => {
             snapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
                 id: doc.id,
                 ...doc.data(),
-                
+
             })).map((msg) => {
                 snapArray.push(
                     {
@@ -68,8 +64,6 @@ const ChatScreen = ({ route }: ProfileProps) => {
                     }
                 )
                 setAllMsgs(snapArray)
-                console.log(snapArray);
-                
             })
         })
 
@@ -77,9 +71,8 @@ const ChatScreen = ({ route }: ProfileProps) => {
         const chat = {
             id: chatRes.id,
             ...chatRes.data()
-
         }
-        console.log(chat, allMsgs);
+        // console.log(chat, allMsgs);
 
     }
 
@@ -93,15 +86,14 @@ const ChatScreen = ({ route }: ProfileProps) => {
         const metaData = {
             contentType: mimeType,
         }
-        
+
         const fileRef = ref(storage, `files/${chatData.chatId}-${name}`);
         const uploaded = await uploadBytes(fileRef, await convertToBlob(uri), metaData)
         if (uploaded) {
             console.log(metaData.contentType);
-            dispatch(uploadedFilesData({ fileMimeType: metaData.contentType}))
+            dispatch(uploadedFilesData({ fileMimeType: metaData.contentType }))
             getDownloadURL(uploaded.ref).then(async (url) => {
                 const filesGroupeCollections = collection(reference, "messages")
-                // !try to shorten the code
                 await addFileFirestore(filesGroupeCollections, url, currentUser.currentUser, metaData.contentType)
             })
 
@@ -109,33 +101,15 @@ const ChatScreen = ({ route }: ProfileProps) => {
     }
 
 
-    const getListOfUploadedFiles = () => {
-
-
-        const filesRef = ref(storage, "files/")
-        listAll(filesRef).then((res) => {
-            console.log(res);
-
-        })
-    }
-
-
 
     useEffect(() => {
         getChat()
-        getListOfUploadedFiles()
-
-
         arrUserDetails.push(pressedUser.pressedUser);
         setUserDetails(arrUserDetails);
-        // console.log(filesList);
 
-    }, [currentUser.currentUser, filesList])
-
-    const recipientEmail = getRecipientEmail(chatData.chatUsers, currentUser.currentUser)
+    }, [currentUser.currentUser])
+    
     const [messagesSnapshot] = useCollection(messagesRes)
-
-
 
     const showMessage = () => {
         if (messagesSnapshot) {
@@ -149,7 +123,6 @@ const ChatScreen = ({ route }: ProfileProps) => {
                     }}
                     messageType={message.data().messageType}
                     MessageKey={message.id}
-                // !type: message.data().type
                 />
             ))
         } else {
@@ -163,7 +136,6 @@ const ChatScreen = ({ route }: ProfileProps) => {
                     }}
                     messageType={message.data().messageType}
                     MessageKey={message.id}
-                // !type: message.data().type
                 />
             ))
         }
@@ -193,8 +165,6 @@ const ChatScreen = ({ route }: ProfileProps) => {
 
 
 
-
-
     return (
         <SafeAreaView>
             <View className='bg-gray-200 h-full relative'>
@@ -205,8 +175,8 @@ const ChatScreen = ({ route }: ProfileProps) => {
                         </Pressable>
                         <View className='w-14 h-14 bg-white ml-4 mt-2 rounded-full'>
                             <Image
-                                source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
-                                className='w-fit h-full object-contain'
+                                source={{ uri: route.params.imageProfileUrl ? route.params.imageProfileUrl : 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
+                                className='w-fit rounded-full h-full object-contain'
                             />
                         </View>
                         {userDetails?.map((user: ChatUserDetails) => {
@@ -251,12 +221,6 @@ const ChatScreen = ({ route }: ProfileProps) => {
                         </View>
                     </Pressable>
                 </View>
-
-
-
-
-
-
             </View>
         </SafeAreaView>
     )

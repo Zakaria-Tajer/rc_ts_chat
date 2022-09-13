@@ -6,10 +6,7 @@ import { Fontisto, EvilIcons } from '@expo/vector-icons';
 import { AuthSwitch, StackSwitch } from '../../redux/slices/SwitchSlice';
 import { AppDispatch } from '../../redux/store';
 import { useDispatch } from 'react-redux';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
-import { RouteParams } from '../../types/RooteTypes';
+import AsyncStorage from '@react-native-async-storage/async-storage';;
 import AuthLayout from '../../Layouts/Layout';
 import { API_URL } from '../../types/Urls';
 import { isValidBool, isValidUser } from '../../constants/isValidUser';
@@ -51,7 +48,7 @@ export const Login = () => {
                 password: values.password,
             })
         }).then((res) => res.json())
-        .catch(err => console.log(err))
+            .catch(err => console.log(err))
         console.log(result);
         const { Message, Token } = result
         if (Message == 'success') {
@@ -75,8 +72,6 @@ export const Login = () => {
                     validationSchema={SignupSchema}
                     onSubmit={values =>
                         login(values)
-                        // console.log(values)
-
                     }
                 >
                     {({ handleChange, handleSubmit, handleBlur, values, errors, touched }) => (
@@ -90,7 +85,7 @@ export const Login = () => {
                                     onBlur={handleBlur('email')}
                                     value={values.email}
                                     style={styles.inputsPlaceholder}
-
+                                    className='pr-12'
                                 />
                                 <View style={styles.icons}>
                                     <Fontisto name="email" size={24} color="gray" />
@@ -121,7 +116,7 @@ export const Login = () => {
                                 </View>
 
                             </View>
-                            {isErrors ? <View className='w-10/12 mt-7 h-8 border-[#ad0808] mb-4 border-2 rounded-lg justify-center items-center'>
+                            {isErrors ? <View className='w-10/12 mt-7 max-h-8 border-[#ad0808] mb-4 border-2 rounded-lg justify-center items-center'>
                                 <Text className='text-[#ad0808]' style={{ fontFamily: 'Montserrat-Medium', fontWeight: '600' }}>Identifiant ou mot de passe incorrect</Text>
                             </View> : null}
                             <View className={`w-full justify-center items-center h-fit  space-y-4 ${isErrors ? 'mt-2' : 'mt-10'}`}>

@@ -1,4 +1,4 @@
-const Mainurl = 'https://1bf2-196-217-17-140.eu.ngrok.io'
+const Mainurl = 'https://fea9-160-178-224-28.eu.ngrok.io'
 const securl = 'http://192.168.1.5:3000'
 const thirdurl = 'http://10.10.11.30:3000'
 

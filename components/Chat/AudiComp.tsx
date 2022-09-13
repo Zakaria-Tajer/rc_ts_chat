@@ -1,7 +1,7 @@
 import { View, Image, Text, Pressable } from 'react-native'
 import React from 'react'
 import { Audio } from 'expo-av';
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Entypo, AntDesign } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { useSelector } from 'react-redux';
@@ -18,7 +18,6 @@ const AudiComp = (url: string | any) => {
     const [playBackPosition, setPlaybackPosition] = useState<any>(null)
     const [playBackDuration, setPlaybackDuration] = useState<any>(null)
     const [totalAudioDuration, setTotalAudioDuration] = useState<any>({})
-    // const [duration, setDuration] = useState<string | number>('')
 
     useEffect(() => {
         const _onPlaybackStatusUpdate = (playbackStatus: any) => {
@@ -27,36 +26,37 @@ const AudiComp = (url: string | any) => {
         const playAudioObj = new Audio.Sound();
         playAudioObj.loadAsync({
             uri: url.source.uri,
-        });
+        }, { shouldPlay: false });
         playAudioObj.setOnPlaybackStatusUpdate(_onPlaybackStatusUpdate)
     }, [])
 
-
     const AudioId = useSelector((state: RooteState) => state.dataHandler.AudioId)
+    // console.log("audi", AudioId);
+
     const _onPlaybackStatusUpdate = (playbackStatus: any) => {
         console.log(playbackStatus);
         if (playbackStatus.isLoaded && playbackStatus.isPlaying) {
             setPlaybackPosition(playbackStatus.positionMillis);
             setPlaybackDuration(playbackStatus.durationMillis);
-            // setTotalAudioDuration(Math.floor(playbackStatus.durationMillis / 60000))
         }
 
     }
 
-    const calculateSeekBar = () => {
-        if (playBackPosition !== null && playBackDuration !== null) {
+    const calculateSeekBar = (isComplete: any) => {
+        if (playBackPosition !== null && playBackDuration !== null && isComplete === false) {
             return playBackPosition / playBackDuration
-
+        } else {
+            return playBackPosition
         }
+
+
     }
 
-    // setDuration(totalAudioDuration.durationMillis / 6000)
+    const millisToMinutesAndSeconds = () => {
+        let minutes = Math.floor(totalAudioDuration.durationMillis / 60000);
+        let seconds: any = ((totalAudioDuration.durationMillis % 60000) / 1000).toFixed(0);
 
-    const audioDuration = Math.floor(totalAudioDuration.durationMillis / 60000)
-
-    const millisToMinutesAndSeconds = () =>  {
-        var minutes = Math.floor(totalAudioDuration.durationMillis / 60000);
-        var seconds: any = ((totalAudioDuration.durationMillis % 60000) / 1000).toFixed(0);
+        if (isNaN(seconds)) return '...'
         return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
     }
     const playAudio = async () => {
@@ -71,7 +71,7 @@ const AudiComp = (url: string | any) => {
             setIsSoundPlaying(playAudioObj)
             console.log(isSoundPlaying);
 
-            playAudioObj.setOnPlaybackStatusUpdate(_onPlaybackStatusUpdate)
+            return playAudioObj.setOnPlaybackStatusUpdate(_onPlaybackStatusUpdate)
         }
 
         if (soundStatus.isLoaded && soundStatus.isPlaying) {
@@ -91,7 +91,7 @@ const AudiComp = (url: string | any) => {
     return (
         <View className='w-3/4 relative flex-row pl-3 py-3 mr-3 h-16 items-center bg-white shadow-sm mt-4 rounded justify-between'>
 
-            <View className='flex-row'>
+            <View className='flex-row items-center'>
 
                 <Pressable onPress={playAudio}>
                     {isPlaying ? (
@@ -107,17 +107,17 @@ const AudiComp = (url: string | any) => {
                         style={{ width: 190, height: 40 }}
                         minimumValue={0}
                         maximumValue={1}
-                        value={calculateSeekBar()}
+                        value={calculateSeekBar(false)}
                         thumbTintColor='#ad0808'
                         minimumTrackTintColor="#ad0808"
                         maximumTrackTintColor="#ad0808"
-                        onSlidingComplete={() => { }}
+                        onSlidingComplete={(val) => calculateSeekBar(val)}
                     />
                     <Text className='text-xs -bottom-2 left-3 absolute'>{millisToMinutesAndSeconds()}{" "}min</Text>
                 </View>
             </View>
-            <View className='w-10 h-10 mr-4 rounded-full bg-blue-400'>
-                <Image source={{}} />
+            <View className='w-10 h-10 mr-4 rounded-full'>
+                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }} className='w-fit h-full object-contain' />
             </View>
 
         </View>

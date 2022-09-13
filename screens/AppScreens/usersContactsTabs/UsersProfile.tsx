@@ -4,21 +4,38 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { AntDesign, FontAwesome, Feather, MaterialCommunityIcons, Entypo } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RouteParams } from '../../../types/RooteTypes';
+import { useSelector } from 'react-redux';
+import { RooteState } from '../../../redux/store';
+import { collection, DocumentData, Query, query, where } from 'firebase/firestore';
+import { db } from '../../../constants/firebase';
+import getRecipientEmail from '../../../utils/getRecipientEmail';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import moment from 'moment';
 
 type ProfileProps = NativeStackScreenProps<RouteParams, 'usersProfile'>;
 
 const UsersProfile = ({ route, navigation }: ProfileProps) => {
 
   const [AllCalls, setAllCalls] = useState<boolean>(false)
-
+  const currentUser = useSelector((state: RooteState) => state.dataHandler)
+  const chatData = useSelector((state: RooteState) => state.chatHandler)
   const updateUserInformation = () => {
-    
+
   }
   const switchComp = () => {
     setAllCalls(!AllCalls)
   }
-  console.log(route.params?.contactUserId);
+  // console.log(route.params?.contactUserId);
 
+  const recipientQuery: Query<DocumentData> =
+    query(
+      collection(db, "users"),
+      where("email", "==", getRecipientEmail([route.params.email, currentUser.currentUser], currentUser.currentUser))
+    )
+
+  const [recipientSnapShot] = useCollection(recipientQuery)
+  const recipient = recipientSnapShot?.docs?.[0]?.data()
+  console.log(recipient);
 
 
   return (
@@ -36,14 +53,50 @@ const UsersProfile = ({ route, navigation }: ProfileProps) => {
             </View>
           </View>
           <Image
-            source={{ uri: 'https://media.istockphoto.com/photos/young-woman-laughing-while-relaxing-at-home-picture-id1326417862?b=1&k=20&m=1326417862&s=612x612&w=0&h=MYfSIwNeawprDmzDGL5meHWetVPiRXE6TVamWS4mvsY=' }}
+            source={{ uri: route.params.imageProfileUrl ? route.params.imageProfileUrl : 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}
             className='w-full h-full'
           />
           <View className='absolute pt-10'>
-            <Text className='text-3xl text-white font-semibold'>DIANE TEL</Text>
+            <Text className='text-4xl text-white font-semibold text-center'>{route.params.firstName}{" "}{route.params.lastName}</Text>
             <View className='flex-row items-center justify-center space-x-2'>
-              <View className='w-2 h-2 rounded-full bg-green-400'></View>
-              <Text className='text-green-400 font-bold'>En ligne</Text>
+              {recipientSnapShot ? (
+                <View className='flex-row items-center justify-center space-x-2'>
+                  {recipient?.lastSeen?.toDate() ? (
+                    <View className='flex-row items-center justify-center space-x-2'>
+                      <Text className='text-red-700 font-bold text-base'>Hors Ligne {" "}
+                        {moment.utc(new Date(recipient?.lastSeen?.toDate())).fromNow()}
+                      </Text>
+                    </View>
+                  ) : (
+                    <>
+                      {recipient === undefined ? (
+                        <>
+                          <View className='flex-row items-center justify-center space-x-2'>
+                            <View className='w-2 h-2 rounded-full bg-red-700 mr-1'></View>
+                            <Text className='text-red-700 font-bold text-base'>Hors Ligne {" "}
+                              {/* {moment.utc(new Date(recipient?.lastSeen?.toDate())).fromNow()} */}
+                            </Text>
+                          </View>
+                        </>
+                      ) : (
+                        <View className='flex-row items-center justify-center space-x-2'>
+                          <View className='w-2 h-2 rounded-full bg-red-700 mr-1'></View>
+                          <Text className='text-red-700 font-bold text-base'>
+                            En Ligne
+                          </Text>
+                        </View>
+                      )}
+                    </>
+                  )}
+                </View>
+              ) : (
+                <View className='flex-row items-center justify-center space-x-2'>
+                  <View className='w-2 h-2 rounded-full bg-red-700 mr-1'></View>
+                  <Text className='text-red-700 font-bold text-base'>Hors Ligne
+                  </Text>
+                </View>
+              )}
+
             </View>
           </View>
 
@@ -154,7 +207,7 @@ const UsersProfile = ({ route, navigation }: ProfileProps) => {
               )}
 
               <View className='w-full mt-7 items-center justify-center'>
-                <Pressable onPress={() => {}}>
+                <Pressable onPress={() => { }}>
                   <View className='bg-[#ad0808] px-4 py-4 rounded-full items-center justify-center'>
                     <Text className='text-white text-xs' style={{ fontFamily: 'Montserrat-Medium', fontWeight: "500" }}>CREER UNE REUNION AVEC D'AUTRES PARTICIPANTS</Text>
                   </View>
