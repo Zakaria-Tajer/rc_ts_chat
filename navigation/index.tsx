@@ -1,5 +1,4 @@
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RooteState } from '../redux/store';
 import AuthScreen from '../screens/AuthScreen';
@@ -13,11 +12,12 @@ import { StackSwitch } from '../redux/slices/SwitchSlice';
 import ChatScreen from '../screens/AppScreens/ChatScreen';
 import OtherUsersProfiles from '../screens/AppScreens/usersContactsTabs/UsersProfile';
 import CurrUserProfileScreen from '../screens/AppScreens/currentUserTabs/CurrUserProfileScreen';
+import ReunionCreation from '../screens/AppScreens/Reunions/ReunionCreation';
+import CallScreen from '../screens/AppScreens/Reunions/CallScreen';
 
 
 
 const Stack = createNativeStackNavigator<RouteParams>();
-
 const screenOptions = {
   headerShown: false,
 }
@@ -63,6 +63,20 @@ export function SignedInStack() {
         headerShown: false,
         animation: 'slide_from_right',
       }}
+      />
+      <Stack.Screen name="ReunionCreation" component={ReunionCreation} options={{
+        animation: 'slide_from_right',
+        headerTitleAlign: 'center',
+        headerTitleStyle: {fontWeight: 'bold'}, 
+        title: "NOUVELLE REUNION"
+      }}
+    
+      />
+      <Stack.Screen name="CallScreen" component={CallScreen} options={{
+        animation: 'slide_from_right',
+        headerShown: false
+      }}
+    
       />
     </Stack.Navigator>
   )

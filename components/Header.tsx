@@ -23,10 +23,16 @@ const Header = () => {
                         </View>
                     </View>
 
-                    <View className='w-1/3 bg-[#ad0808] h-3/5 rounded-full flex-row items-center justify-center space-x-2'>
+                    <Pressable
+                        className='w-1/3 bg-[#ad0808] h-3/5 rounded-full flex-row items-center justify-center space-x-2'
+                        onPress={() => {
+                            navigation.setOptions({ title: 'NOUVELLE REUNION' })
+                            navigation.navigate("ReunionCreation")
+                        }}
+                    >
                         <AntDesign name="videocamera" size={20} color="white" />
                         <Text className='text-white text-xs'>DEMARRER</Text>
-                    </View>
+                    </Pressable>
                     <Pressable onPress={() => {
                         navigation.navigate("currentUserProfile")
                     }}>

@@ -14,4 +14,6 @@ export type RouteParams = {
     email: string;
   };
   currentUserProfile: undefined;
+  ReunionCreation: undefined;
+  CallScreen: undefined;
 };
