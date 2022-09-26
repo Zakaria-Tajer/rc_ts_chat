@@ -26,6 +26,8 @@ const HomeScreen = () => {
     }).then((res) => res.json())
     console.log("HomseScreen", result);
     
+    dispatch(setUsersData({ users: result.msg, currentUserId: result.currentUserId, currentUser: result.currentUserEmail }))
+    
     const data = await getDoc(doc(collection(db, "users"), `${result.currentUserId}`))
 
     if (result.status == 200) {
@@ -41,7 +43,6 @@ const HomeScreen = () => {
         .catch((err) => console.log(err))
     }
 
-    dispatch(setUsersData({ users: result.msg, currentUserId: result.currentUserId, currentUser: result.currentUserEmail }))
   }
 
 

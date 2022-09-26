@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setReuinonAccess, setReuinonDate, setReuinonRestrictions, setReuinonStarter } from '../../../redux/slices/ReunionSlice';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RouteParams } from '../../../types/RooteTypes';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../../../constants/firebase';
 
 
 
@@ -17,7 +19,7 @@ import { RouteParams } from '../../../types/RooteTypes';
 
 type ProfileProps = NativeStackScreenProps<RouteParams, 'ReunionCreation'>;
 
-const ReunionCreation = ({navigation}: ProfileProps) => {
+const ReunionCreation = ({ navigation }: ProfileProps) => {
 
 
 
@@ -35,31 +37,50 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
   const [showCalendar, setShowCalendar] = useState<boolean>(false);
   const [showTimeCalendar, setShowTimeCalendar] = useState<boolean>(false);
   const [date, setDate] = useState(new Date());
+  const [time, setTime] = useState(new Date());
   const [isMode, setIsMode] = useState<string>('date')
 
-  const onChange = (event: any, selectedDate: any) => {
-    if (isMode == 'date') {
-      const currentDate = selectedDate || date
-      let tempDate = new Date(currentDate)
-      let formatedDate = `${tempDate.getDate()}/${tempDate.getMonth()}/${tempDate.getFullYear()}`
-      // setPickedDate(formatedDate)
-      dispatch(setReuinonDate({ ReunionDate: formatedDate }))
-    } else {
-      const currentDate = selectedDate || date
-      let tempDate = new Date(currentDate)
-      let formatedTime = `${tempDate.getHours()}:${tempDate.getMinutes()}`
-      // setPickedTime(formatedDate)
-      dispatch(setReuinonDate({ ReunionTime: formatedTime }))
 
-    }
+  const [formatedDates, setFormatedDate] = useState<string>('')
+  const [formatedTimes, setFormatedTime] = useState<string>('')
+
+
+  const [roomTitle, setRoomTitle] = useState<string>('')
+  const [passawordData, setPassawordData] = useState<string>('')
+  const [password, setPassword] = useState<boolean>(false);
+  const [waitingRoome, setWaitingRoome] = useState<boolean>(false);
+  const [micIsDisabled, setMicIsDisabled] = useState<boolean>(false);
+  const [cameraIsDisabled, setCameraIsDisabled] = useState<boolean>(false);
+  const [blockAllMics, setBlockAllMics] = useState<boolean>(false);
+  const [blockScreenSharing, setBlockScreenSharing] = useState<boolean>(false);
+  const [blockVideo, setBlockVideo] = useState<boolean>(false);
+  const [blockConversations, setBlockConversations] = useState<boolean>(false);
+
+
+
+
+  const onChangeDate = (event: any, selectedDate: any) => {
+    const currentDate = selectedDate || date
+    let tempDate = new Date(currentDate)
+    let formatedDate = `${tempDate.getDate()}/${tempDate.getMonth()}/${tempDate.getFullYear()}`
+    setFormatedDate(formatedDate)
   };
+  const onChangeTime = (event: any, selectedDate: any) => {
+    const currentTime = selectedDate || time
+    let tempDate = new Date(currentTime)
+    let formatedTime = `${tempDate.getHours()}:${tempDate.getMinutes()}`
+    setFormatedTime(formatedTime)
+  };
+
+
+
 
   const showMode = (mode: string) => {
 
     if (mode == 'date') {
       setIsMode(mode)
       setShowCalendar(!showCalendar)
-    } else {
+    } else if ('time') {
       setShowTimeCalendar(!showTimeCalendar)
       setIsMode(mode)
     }
@@ -68,15 +89,35 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
 
 
   const reunionData = useSelector((state: RooteState) => state.ReunionHandler)
+  const currentUserData = useSelector((state: RooteState) => state.dataHandler)
 
 
 
 
 
+  const createRoom =  () => {
+
+    navigation.navigate("CallScreen")
+
+    // if (roomTitle !== "" || undefined || null){
+    //   const roomDoc: any = setDoc(doc(db, "rooms", `${currentUserData.currentUserId}`), {
+    //     roomTitle: roomTitle,
+    //     roomPassaword: passawordData !== "" ? passawordData : "",
+    //     formatedDates: formatedDates !== "" ? formatedDates : "",
+    //     formatedTimes: formatedTimes !== "" ? formatedTimes : "",
+    //   }, {merge: true})
+    //     .then((res: any) => console.log(res?.id))
+    //     .catch((err) => console.log(err));
+      
+    //   // if(roomDoc!){
+    //   //   console.log(roomDoc?.id);
+    //   //   navigation.navigate("CallScreen")
+        
+    //   // }
+    // }
 
 
-
-
+  }
 
 
 
@@ -96,17 +137,17 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
               <TextInput
                 placeholder='Titre de la reunion'
                 className='text-gray-400 border-[1px] py-0.5 border-gray-400 w-5/6 pl-4 text-base font-semibold'
-                onChangeText={e => dispatch(setReuinonAccess({ ReunionTitle: e }))}
+                onChangeText={e => setRoomTitle(e)}
               />
               <View className='flex-row items-center w-5/6 justify-between'>
                 <Text className='text-base text-gray-500'>Mot de passe pour se connecter</Text>
                 <Switch
                   trackColor={{ false: 'gray', true: '#ad0808' }}
-                  thumbColor={reunionData.ReunionPasswordTrue ? "white" : 'white'}
+                  thumbColor={password ? "white" : 'white'}
                   onValueChange={() => {
-                    dispatch(setReuinonAccess({ ReunionPasswordTrue: !reunionData.ReunionPasswordTrue }))
+                    setPassword(!password)
                   }}
-                  value={reunionData.ReunionPasswordTrue}
+                  value={password}
                 />
               </View>
               <View className='w-3/4 flex-row relative items-center'>
@@ -114,7 +155,8 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                   placeholder='password'
                   className='text-gray-400 border-[1px] py-0.5 border-gray-400 w-full pl-4 text-base font-semibold'
                   secureTextEntry={!isHidden}
-                  onChangeText={e => dispatch(setReuinonAccess({ ReunionPassword: e }))}
+                  onChangeText={e => setPassawordData(e)}
+                  value={password ? "" : passawordData}
                 />
                 <View className='absolute right-3'>
                   <Pressable onPress={() => setIsHidden(!isHidden)}>
@@ -154,7 +196,7 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                     < View className='w-3/4 flex-row relative items-center'>
                       <View
                         className='text-gray-400 border-[1px] py-2 mb-2 border-gray-400 w-full pl-4 text-base font-semibold'>
-                        <Text>{reunionData.ReunionDate}</Text>
+                        <Text>{reunionData.ReunionDate ? reunionData.ReunionDate : formatedDates}</Text>
                       </View>
                       <View className='absolute right-3'>
                         <Pressable onPress={() => setIsHidden(!isHidden)}>
@@ -176,7 +218,7 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                     <View className='w-3/4 flex-row relative items-center'>
                       <View
                         className='text-gray-400 border-[1px] py-2 border-gray-400 w-full pl-4 text-base font-semibold'>
-                        <Text>{reunionData.ReunionTime}</Text>
+                        <Text>{reunionData.ReunionTime ? reunionData.ReunionTime : formatedTimes}</Text>
                       </View>
                       <View className='absolute right-3'>
                         <Pressable onPress={() => setIsHidden(!isHidden)}>
@@ -188,30 +230,27 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                 )}
               </View>
             </View>
-            {/* {showCalendar ? (
+            {showCalendar && (
               <DateTimePicker
                 testID="dateTimePicker"
                 value={date}
                 mode={isMode as any}
                 is24Hour={true}
-                onChange={onChange}
+                onChange={onChangeDate}
                 minimumDate={new Date()}
               />
 
-            ) : (
-              <>
-                {showTimeCalendar && (
-                  <DateTimePicker
-                    testID="dateTimePicker"
-                    value={date}
-                    mode={isMode as any}
-                    is24Hour={true}
-                    onChange={onChange}
-                    minimumDate={new Date()}
-                  />
-                )}
-              </>
-            )} */}
+            )}
+            {showTimeCalendar && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={time}
+                mode={isMode as any}
+                is24Hour={true}
+                onChange={onChangeTime}
+                minimumDate={new Date()}
+              />
+            )}
           </View>
           <View className='w-full'>
             <View className='w-full py-1 pl-7 bg-gray-400/75'>
@@ -224,9 +263,9 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                   trackColor={{ false: 'gray', true: '#ad0808' }}
                   thumbColor={isDate ? "white" : 'white'}
                   onValueChange={() => {
-                    dispatch(setReuinonStarter({ WaitingRoome: !reunionData.WaitingRoome }))
+                    setWaitingRoome(!waitingRoome)
                   }}
-                  value={reunionData.WaitingRoome}
+                  value={waitingRoome}
                 />
               </View>
             </View>
@@ -237,9 +276,9 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                   trackColor={{ false: 'gray', true: '#ad0808' }}
                   thumbColor={isDate ? "white" : 'white'}
                   onValueChange={() => {
-                    dispatch(setReuinonStarter({ micIsDisabled: !reunionData.micIsDisabled }))
+                    setMicIsDisabled(!micIsDisabled)
                   }}
-                  value={reunionData.micIsDisabled}
+                  value={micIsDisabled}
                 />
               </View>
             </View>
@@ -250,9 +289,9 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                   trackColor={{ false: 'gray', true: '#ad0808' }}
                   thumbColor={isDate ? "white" : 'white'}
                   onValueChange={() => {
-                    dispatch(setReuinonStarter({ cameraIsDisabled: !reunionData.cameraIsDisabled }))
+                    setCameraIsDisabled(!cameraIsDisabled)
                   }}
-                  value={reunionData.cameraIsDisabled}
+                  value={cameraIsDisabled}
                 />
               </View>
             </View>
@@ -271,9 +310,9 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                     trackColor={{ false: 'gray', true: '#ad0808' }}
                     thumbColor={isDate ? "white" : 'white'}
                     onValueChange={() => {
-                      dispatch(setReuinonRestrictions({ blockAllMics: !reunionData.blockAllMics }))
+                      setBlockAllMics(!blockAllMics)
                     }}
-                    value={reunionData.blockAllMics}
+                    value={blockAllMics}
                   />
                 </View>
               </View>
@@ -285,9 +324,9 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                   trackColor={{ false: 'gray', true: '#ad0808' }}
                   thumbColor={isDate ? "white" : 'white'}
                   onValueChange={() => {
-                    dispatch(setReuinonRestrictions({ blockScreenSharing: !reunionData.blockScreenSharing }))
+                    setBlockScreenSharing(!blockScreenSharing)
                   }}
-                  value={reunionData.blockScreenSharing}
+                  value={blockScreenSharing}
                 />
               </View>
             </View>
@@ -298,9 +337,9 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                   trackColor={{ false: 'gray', true: '#ad0808' }}
                   thumbColor={isDate ? "white" : 'white'}
                   onValueChange={() => {
-                    dispatch(setReuinonRestrictions({ blockVideo: !reunionData.blockVideo }))
+                    setBlockVideo(!blockVideo)
                   }}
-                  value={reunionData.blockVideo}
+                  value={blockVideo}
                 />
               </View>
             </View>
@@ -311,9 +350,9 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
                   trackColor={{ false: 'gray', true: '#ad0808' }}
                   thumbColor={isDate ? "white" : 'white'}
                   onValueChange={() => {
-                    dispatch(setReuinonRestrictions({ blockConversations: !reunionData.blockConversations }))
+                    setBlockConversations(!blockConversations)
                   }}
-                  value={reunionData.blockConversations}
+                  value={blockConversations}
                 />
               </View>
             </View>
@@ -327,9 +366,7 @@ const ReunionCreation = ({navigation}: ProfileProps) => {
         </View>
 
         <View className='pb-8 mt-6 w-full items-center justify-center pl-4'>
-          <TouchableOpacity onPress={() => {
-            navigation.navigate("CallScreen")
-          }}>
+          <TouchableOpacity onPress={createRoom}>
             <View className='bg-[#ad0808] items-center justify-center rounded-full w-40 py-3'>
               <Text className='text-white'>Creer la reunion</Text>
             </View>

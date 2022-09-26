@@ -1,4 +1,4 @@
-const Mainurl = 'https://9fa7-196-75-111-13.eu.ngrok.io'
+const Mainurl = 'https://8995-41-251-8-58.eu.ngrok.io'
 const securl = 'http://192.168.1.5:3000'
 // export const thirdurl = 'http://10.10.11.30:3000'
 
